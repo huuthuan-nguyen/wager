@@ -1,0 +1,42 @@
+version: '3.5'
+
+services:
+  # App Service
+  app:
+    # Configuration for building the docker image for the service
+    build:
+      context: ./  # Use an image built from the specified dockerfile in the current directory.
+      dockerfile: build/Dockerfile
+    container_name: wager-app
+    ports:
+      - "8080:8080" # Forward the exposed port 8080 on the container to port 8080 on the host machine
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks: # Networks to join (Services on the same network can communicate with each other using their name)
+      - wager
+
+    #MySQL Service
+  db:
+    image: mysql:5.7.36
+    container_name: wager-db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    networks:
+      - wager
+    environment:
+      MYSQL_DATABASE: wager
+      MYSQL_ROOT_PASSWORD: 12345
+    volumes:
+      - db:/var/lib/mysql
+      - /wager/docker-compose/mysql/my.cnf:/etc/mysql/my.cnf
+
+networks:
+  wager:
+    driver: bridge
+
+volumes:
+  db:
+    driver: local
